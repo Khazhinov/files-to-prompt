@@ -258,6 +258,20 @@ def test_binary_file_warning(tmpdir):
         )
 
 
+def test_utf8_text_file(tmpdir):
+    runner = CliRunner()
+    with tmpdir.as_cwd():
+        os.makedirs("test_dir")
+        with open("test_dir/unicode.md", "wb") as f:
+            f.write("# Заголовок\n\nТекст с символом →\n".encode("utf-8"))
+
+        result = runner.invoke(cli, ["test_dir"])
+        assert result.exit_code == 0
+        assert "unicode.md" in result.stdout
+        assert "Заголовок" in result.stdout
+        assert "→" in result.stdout
+
+
 @pytest.mark.parametrize(
     "args", (["test_dir"], ["test_dir/file1.txt", "test_dir/file2.txt"])
 )

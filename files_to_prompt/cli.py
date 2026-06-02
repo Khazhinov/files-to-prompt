@@ -6,6 +6,14 @@ import click
 
 global_index = 1
 
+TEXT_FILE_ENCODING = "utf-8"
+
+
+def read_text_file(path):
+    with open(path, "r", encoding=TEXT_FILE_ENCODING) as f:
+        return f.read()
+
+
 EXT_TO_LANG = {
     "py": "python",
     "c": "c",
@@ -36,7 +44,7 @@ def should_ignore(path, gitignore_rules):
 def read_gitignore(path):
     gitignore_path = os.path.join(path, ".gitignore")
     if os.path.isfile(gitignore_path):
-        with open(gitignore_path, "r") as f:
+        with open(gitignore_path, "r", encoding=TEXT_FILE_ENCODING) as f:
             return [
                 line.strip() for line in f if line.strip() and not line.startswith("#")
             ]
@@ -113,8 +121,14 @@ def process_path(
 ):
     if os.path.isfile(path):
         try:
-            with open(path, "r") as f:
-                print_path(writer, path, f.read(), claude_xml, markdown, line_numbers)
+            print_path(
+                writer,
+                path,
+                read_text_file(path),
+                claude_xml,
+                markdown,
+                line_numbers,
+            )
         except UnicodeDecodeError:
             warning_message = f"Warning: Skipping file {path} due to UnicodeDecodeError"
             click.echo(click.style(warning_message, fg="red"), err=True)
@@ -156,15 +170,14 @@ def process_path(
             for file in sorted(files):
                 file_path = os.path.join(root, file)
                 try:
-                    with open(file_path, "r") as f:
-                        print_path(
-                            writer,
-                            file_path,
-                            f.read(),
-                            claude_xml,
-                            markdown,
-                            line_numbers,
-                        )
+                    print_path(
+                        writer,
+                        file_path,
+                        read_text_file(file_path),
+                        claude_xml,
+                        markdown,
+                        line_numbers,
+                    )
                 except UnicodeDecodeError:
                     warning_message = (
                         f"Warning: Skipping file {file_path} due to UnicodeDecodeError"
